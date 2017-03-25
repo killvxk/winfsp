@@ -15,24 +15,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="winfsp.cpp">
+    <ClCompile Include="..\..\src\dotnet\fileNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fileNode.cpp">
+    <ClCompile Include="..\..\src\dotnet\interop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="interop.cpp">
+    <ClCompile Include="..\..\src\dotnet\winfsp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="winfsp.h">
+    <ClInclude Include="..\..\src\dotnet\fileNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="interop.h">
+    <ClInclude Include="..\..\src\dotnet\interop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="fileNode.h">
+    <ClInclude Include="..\..\src\dotnet\winfsp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
