@@ -53,9 +53,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fscrash", "testing\fscrash.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fsbench", "testing\fsbench.vcxproj", "{C4E1E9E5-0959-488E-8C6A-C327CC81BEFB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winfsp.net", "..\..\src\dotnet\winfsp.net.vcxproj", "{E220D8C7-EDFA-47BC-9041-08278DA635EE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winfsp.net", "winfsp.net.vcxproj", "{E220D8C7-EDFA-47BC-9041-08278DA635EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemFsSharp", "..\..\tst\MemFsSharp\MemFsSharp.csproj", "{16F1F4EC-845D-474A-BFBB-358CC7F36846}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemFsSharp", "testing\MemFsSharp.csproj", "{16F1F4EC-845D-474A-BFBB-358CC7F36846}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

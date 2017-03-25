@@ -96,17 +96,28 @@ namespace MemFsSharp
 
         public void Cleanup(WinFspFileSystem FileSystem, FileOpenContext Context, string FileName, uint Flag)
         {
+            var fileObject = GetFileObject(FileName);
+            if (fileObject == null )
+                return;
             if (((uint)CleanUpFlags.FspCleanupDelete & Flag) != 0)
             {
-                string parentFile = Path.GetDirectoryName(FileName);                
-                var dir = GetFileObject(parentFile);
-                if (dir != null && dir is RamDir)
+                if (fileObject is RamDir && (fileObject as RamDir).Childeren.Count > 0)
+                    return;
+                string parentFile = Path.GetDirectoryName(FileName);
+                var parentDir = GetFileObject(parentFile);
+                if (parentDir != null && parentDir is RamDir)
                 {
-                    RemoveFileObject(FileName, dir);
+                    RemoveFileObject(FileName, parentDir);
                     Trace.WriteLine($"Delete FileName {FileName} {GetFileObject(FileName)}");
-                    Trace.WriteLine($"List Parent Dir- "+string.Join(",",(dir as RamDir).Childeren.Keys.ToArray()));
+                    //Trace.WriteLine($"List Parent Dir- "+string.Join(",",(dir as RamDir).Childeren.Keys.ToArray()));
 
                 }
+            }
+            if ((Flag & (uint)CleanUpFlags.FspCleanupSetAllocationSize) != 0) {
+                if (fileObject is RamFile) {
+             
+                }
+
             }
             
         }
@@ -145,8 +156,7 @@ namespace MemFsSharp
 
             FileObject file;
             uint status = CreateFileObject(FileName, isFolder, parent, out file);
-          //  Trace.WriteLine($"Create FileName {FileName} {GetFileObject(FileName)} status {String.Format("{0:X}", status)}");
-           // Trace.WriteLine($"List Parent Dir- " + string.Join(",", (parent as RamDir).Childeren.Keys.ToArray()));
+            Trace.WriteLine($"Create FileName {FileName} {GetFileObject(FileName)} status {String.Format("{0:X}", status)}");
             if (NtStatus.STATUS_SUCCESS !=status) {
                 return status;
             }
@@ -158,26 +168,26 @@ namespace MemFsSharp
             if (!isFolder)
             {
                 var ramFile = file as RamFile;
-                Context.Node.Info.AllocationSize = AllocationSize;
+                Context.Node.Info.AllocationSize = AllocationSize;                
                 ramFile.FileData.SetLength((long)AllocationSize);
-                file.Info.FileAttributes = FileAttirutes.FILE_ATTRIBUTE_NORMAL;
+                Context.Node.Info.FileAttributes = FileAttirutes.FILE_ATTRIBUTE_NORMAL;                
             }
             else {
-                file.Info.FileAttributes = FileAttirutes.FILE_ATTRIBUTE_DIRECTORY;
+                Context.Node.Info.FileAttributes = FileAttirutes.FILE_ATTRIBUTE_DIRECTORY;
             }
-            Context.Node.Info = file.Info;
-            
+            file.Info = Context.Node.Info;
             Context.Node.UserContext = file;
-            return 0;
+            return NtStatus.STATUS_SUCCESS;
         }
 
          public uint Open(WinFspFileSystem FileSystem, string FileName, uint CreateOptions, uint GrantedAccess, FileOpenContext Context)
         {
             FileName = FileName.TrimEnd('\\');
             var file= GetFileObject(FileName);
-
+            Trace.WriteLine($"Open FileName {FileName} fileFound {file!=null}");
             if (file == null)
                 return NtStatus.STATUS_OBJECT_NAME_NOT_FOUND;
+
             Context.Node.Info = file.Info;
             Context.Node.UserContext = file;
             return 0;
@@ -185,9 +195,11 @@ namespace MemFsSharp
 
          public uint Overwrite(WinFspFileSystem FileSystem, FileOpenContext Context, uint FileAttributes, bool ReplaceFileAttributes)
         {
+            
             if (Context.Node.UserContext == null)
                 return NtStatus.STATUS_INVALID_PARAMETER;
             var file = Context.Node.UserContext as FileObject;
+            Trace.WriteLine($"Overwrite FileName {file.FileName} fileFound {file != null}");
 
             file.Info.FileSize = 0;            
             file.Info.LastAccessTime= file.Info.LastWriteTime = WinFsp.GetFileTime();
@@ -200,11 +212,7 @@ namespace MemFsSharp
         //    Console.WriteLine("READ: BufferLength {0} Offset {1} ", buffer.Length, buffer.Offset);
             if (Context.Node.UserContext == null)
                 return NtStatus.STATUS_INVALID_PARAMETER;
-            
-            
-
-
-
+                      
             var file = Context.Node.UserContext as RamFile;
             if (file == null)
                 return NtStatus.STATUS_INVALID_PARAMETER;
@@ -268,8 +276,16 @@ namespace MemFsSharp
             return NtStatus.STATUS_SUCCESS;
         }
 
-         public uint GetFileInfo(WinFspFileSystem FileSystem, FileOpenContext Context)
-        {            
+         public uint GetFileInfo(WinFspFileSystem FileSystem, FileOpenContext Context,WinFspNet.FileInfo fileInfo)
+        {
+            var file = Context.Node.UserContext;
+            if (file is RamFile) {
+                RamFile ramFile = (file as RamFile);
+                fileInfo.AllocationSize = (ulong)ramFile.FileData.Capacity;
+                fileInfo.FileSize = (ulong)ramFile.FileData.Length;
+            }
+            
+                     
             return NtStatus.STATUS_SUCCESS;
         }
 
@@ -325,13 +341,21 @@ namespace MemFsSharp
         {           
             FileName = FileName.TrimEnd('\\');
             var dir = GetFileObject(FileName);
-            if (dir != null && dir is RamDir)
+            if (dir != null )
             {
-                var dirL = dir as RamDir;
-                if (dirL.Childeren.Count > 0)
-                    return NtStatus.STATUS_DIRECTORY_NOT_EMPTY;
-            }
-            return NtStatus.STATUS_SUCCESS;
+                if (dir is RamDir)
+                {
+                    var dirL = dir as RamDir;
+                    if (dirL.Childeren.Count > 0)
+                        return NtStatus.STATUS_DIRECTORY_NOT_EMPTY;
+                    else
+                        return NtStatus.STATUS_SUCCESS;
+                }
+                else
+                    return NtStatus.STATUS_SUCCESS;
+            }else
+                return NtStatus.STATUS_OBJECT_NAME_NOT_FOUND;
+
         }
 
          public uint Rename(WinFspFileSystem FileSystem, FileOpenContext Context, string FileName, string NewFileName, bool ReplaceIfExists)

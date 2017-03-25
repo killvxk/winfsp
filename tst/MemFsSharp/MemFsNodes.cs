@@ -16,7 +16,7 @@ namespace MemFsSharp
 
         internal class FileObject {
             public string FileName { get; set; }
-            public WinFspNet.FileInfo Info { get; protected set; }
+            public WinFspNet.FileInfo Info { get; internal set; }
             public FileObject() {
                 Info = new WinFspNet.FileInfo();
             }
@@ -51,6 +51,7 @@ namespace MemFsSharp
                 Info.LastAccessTime = WinFsp.GetFileTime();
                 Info.LastWriteTime = WinFsp.GetFileTime();
             }
+
             public long GetNextIndex() {
                 return Interlocked.Increment(ref IndexCount);
             }

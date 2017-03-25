@@ -8,9 +8,7 @@ using System.Threading.Tasks;
 namespace MemFsSharp
 {
     class Program
-    {
-        
-	    
+    {        	    
         static void Main(string[] args)
         {            
             RamFS fs = new RamFS();

@@ -31,6 +31,7 @@ namespace MemFsSharp
         public const uint STATUS_INVALID_PARAMETER = 0xC000000D;
         public const uint STATUS_ACCESS_DENIED = 0xC0000022;
     }
+
     class FileAttirutes {
 
         public const uint FILE_ATTRIBUTE_READONLY = 0x00000001;

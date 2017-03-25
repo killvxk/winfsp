@@ -73,15 +73,15 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\%40HomeWork\ThirdParty\UFS\winfsp\inc;$(IncludePath)</IncludePath>
-    <OutDir>..\..\build\VStudio\build\Debug\</OutDir>
+    <IncludePath>..\..\inc;$(IncludePath)</IncludePath>
+    <OutDir>.\build\$(Configuration)</OutDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)-x64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\%40HomeWork\ThirdParty\UFS\winfsp\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\inc;$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)-x86</TargetName>
-    <OutDir>..\..\build\VStudio\build\Debug\</OutDir>
+    <OutDir>.\build\$(Configuration)</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -127,14 +127,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="fileNode.h" />
-    <ClInclude Include="interop.h" />
-    <ClInclude Include="winfsp.h" />
+    <ClInclude Include="..\..\src\dotnet\fileNode.h" />
+    <ClInclude Include="..\..\src\dotnet\interop.h" />
+    <ClInclude Include="..\..\src\dotnet\winfsp.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="fileNode.cpp" />
-    <ClCompile Include="interop.cpp" />
-    <ClCompile Include="winfsp.cpp" />
+    <ClCompile Include="..\..\src\dotnet\fileNode.cpp" />
+    <ClCompile Include="..\..\src\dotnet\interop.cpp" />
+    <ClCompile Include="..\..\src\dotnet\winfsp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\build\VStudio\winfsp_dll.vcxproj">
