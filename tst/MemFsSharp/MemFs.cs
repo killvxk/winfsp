@@ -2,12 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using WinFspNet;
+using WinFsp;
 namespace MemFsSharp
 {
     public class FileNameComparator : IEqualityComparer<string>
@@ -56,6 +55,26 @@ namespace MemFsSharp
             return result;
         }
     }
+    partial class MemFs 
+    {
+        FileSystem fileSystem;
+        FileSystemConfig fileSystenConfig;
+        FileSystemInteface fileSystemInterface;
+        VolumeInformation fileSystenVolInfo;
+        public MemFs() {
+            fileSystemInterface = new MemFsImpl();
+            fileSystenConfig = new FileSystemConfig();
+            fileSystenVolInfo = new VolumeInformation();
+            fileSystem = FileSystem.BuildFileSystem(fileSystenConfig, fileSystenVolInfo, fileSystemInterface);
+        }
+        public void MountFileSysten(string mountPoint)
+        {
+            fileSystem.MountFileSystem(mountPoint);
+        }
+
+
+    }
+    /*
     partial class RamFS : WinFspFileSystem.WinFspMinimalOperation
     {
       
@@ -202,7 +221,7 @@ namespace MemFsSharp
             Trace.WriteLine($"Overwrite FileName {file.FileName} fileFound {file != null}");
 
             file.Info.FileSize = 0;            
-            file.Info.LastAccessTime= file.Info.LastWriteTime = WinFsp.GetFileTime();
+            file.Info.LastAccessTime= file.Info.LastWriteTime = GetFileTime();
             return NtStatus.STATUS_SUCCESS;
 
         }
@@ -404,6 +423,6 @@ namespace MemFsSharp
          public uint GetSecurity(WinFspFileSystem FileSystem, FileOpenContext Context, ref SecuirtyDescriptor descriptor)
         {
             return NtStatus.STATUS_SUCCESS;
-        }
-    }
+        }*/
 }
+

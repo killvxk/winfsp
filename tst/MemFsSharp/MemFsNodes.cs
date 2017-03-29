@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using WinFspNet;
+using WinFsp;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,9 +16,9 @@ namespace MemFsSharp
 
         internal class FileObject {
             public string FileName { get; set; }
-            public WinFspNet.FileInfo Info { get; internal set; }
+            public WinFsp.FileInfo Info { get; internal set; }
             public FileObject() {
-                Info = new WinFspNet.FileInfo();
+                Info = new WinFsp.FileInfo();
             }
 
         }
@@ -29,10 +29,10 @@ namespace MemFsSharp
             public RamFile(string FName)
             {
                 Info.FileAttributes= (uint)FileAttributes.Normal;
-                Info.ChangeTime = WinFsp.GetFileTime();
-                Info.CreationTime = WinFsp.GetFileTime();
-                Info.LastAccessTime = WinFsp.GetFileTime();
-                Info.LastWriteTime = WinFsp.GetFileTime();                
+                Info.ChangeTime = FsHelperOp.GetFileTime();
+                Info.CreationTime = FsHelperOp.GetFileTime();
+                Info.LastAccessTime = FsHelperOp.GetFileTime();
+                Info.LastWriteTime = FsHelperOp.GetFileTime();
                 FileData = new MemoryStream();
                 FileName = FName;                
             }
@@ -46,10 +46,10 @@ namespace MemFsSharp
                 Info.FileAttributes = MemFsSharp.FileAttirutes.FILE_ATTRIBUTE_DIRECTORY;
                 Childeren = new ConcurrentDictionary<string, FileObject>(StringComparer.OrdinalIgnoreCase);
                 FileName = FName;                
-                Info.ChangeTime = WinFsp.GetFileTime();
-                Info.CreationTime = WinFsp.GetFileTime();
-                Info.LastAccessTime = WinFsp.GetFileTime();
-                Info.LastWriteTime = WinFsp.GetFileTime();
+                Info.ChangeTime = FsHelperOp.GetFileTime();
+                Info.CreationTime = FsHelperOp.GetFileTime();
+                Info.LastAccessTime = FsHelperOp.GetFileTime();
+                Info.LastWriteTime = FsHelperOp.GetFileTime();
             }
 
             public long GetNextIndex() {

@@ -10,9 +10,9 @@ namespace MemFsSharp
     class Program
     {        	    
         static void Main(string[] args)
-        {            
-            RamFS fs = new RamFS();
-            fs.Start();
+        {
+            MemFs implememntation = new MemFs();
+            implememntation.MountFileSysten("X:");
             Process.GetCurrentProcess().WaitForExit();
 
         }

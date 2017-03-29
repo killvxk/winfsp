@@ -75,27 +75,27 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>..\..\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\inc;..\..\src\dotnet\inc;$(IncludePath)</IncludePath>
     <OutDir>.\build\$(Configuration)</OutDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)-x64</TargetName>
     <IntDir>$(SolutionDir)build\$(ProjectName).build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\..\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\inc;..\..\src\dotnet\inc;$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)-x86</TargetName>
     <OutDir>.\build\$(Configuration)</OutDir>
     <IntDir>$(SolutionDir)build\$(ProjectName).build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\..\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\inc;..\..\src\dotnet\inc;$(IncludePath)</IncludePath>
     <OutDir>.\build\$(Configuration)</OutDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)-x64</TargetName>
     <IntDir>$(SolutionDir)build\$(ProjectName).build\$(Configuration)\$(PlatformTarget)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>..\..\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\inc;..\..\src\dotnet\inc;$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)-x86</TargetName>
     <OutDir>.\build\$(Configuration)</OutDir>
     <IntDir>$(SolutionDir)build\$(ProjectName).build\$(Configuration)\$(PlatformTarget)\</IntDir>
@@ -115,6 +115,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,13 +145,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\dotnet\fileNode.h" />
-    <ClInclude Include="..\..\src\dotnet\interop.h" />
+    <ClInclude Include="..\..\src\dotnet\winfspcallbacks.h" />
     <ClInclude Include="..\..\src\dotnet\winfsp.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\dotnet\fileNode.cpp" />
-    <ClCompile Include="..\..\src\dotnet\interop.cpp" />
+    <ClCompile Include="..\..\src\dotnet\winfspcallbacks.cpp" />
     <ClCompile Include="..\..\src\dotnet\winfsp.cpp" />
   </ItemGroup>
   <ItemGroup>
