@@ -130,7 +130,7 @@ namespace WinFsp {
     #pragma endregion
     
     #pragma FspFileSystem Definations
-    FileSystem::FileSystem(FileSystemConfig^ config, VolumeInformation^ volumeInformation, FileSystemInteface^ fsInterface) {
+    FileSystem::FileSystem(FileSystemConfig^ config, VolumeInformation^ volumeInformation, FileSystemInteface^ fsInterface) {        
         _fsInterface = fsInterface;
         _volumeInformation = volumeInformation;
         _config = config;
@@ -141,6 +141,7 @@ namespace WinFsp {
         FileSystemInteface^ fsInterface) {
         FileSystem ^fs = gcnew FileSystem(config, volumeInformation, fsInterface);
         GCHandle handle = GCHandle::Alloc(fs);
+        fs->_fsHandle = GCHandle::ToIntPtr(handle);
         fs->_fsInterface = fsInterface;
         fs->_volumeInformation = volumeInformation;
         fs->_config = config;
@@ -212,8 +213,7 @@ namespace WinFsp {
         if (_config->FileSystemName->Length > 16) {
             _config->FileSystemName = _config->FileSystemName->Substring(0, 15);
         }
-        FSP_FILE_SYSTEM_INTERFACE* inter = nativeInterface;
-        memset(inter, 0, sizeof FSP_FILE_SYSTEM_INTERFACE);
+        FSP_FILE_SYSTEM_INTERFACE* inter = nativeInterface;        
         PWSTR fsName = (PWSTR)InteropServices::Marshal::StringToHGlobalUni(_config->FileSystemName).ToPointer();
         memcpy(VolumeParams->FileSystemName, fsName, wcslen(fsName) * sizeof WCHAR);
         VolumeParams->FileSystemName[_config->FileSystemName->Length] = L'\0';        
@@ -221,7 +221,8 @@ namespace WinFsp {
         NTSTATUS result = FspFileSystemCreate(devicePath, VolumeParams, nativeInterface, &FileSystem);        
         if (result != 0)
             throw gcnew Exception("FileSystem Create failed with error code - 0x" + result.ToString("X"));
-        _fileSystemPtr = IntPtr::IntPtr(FileSystem);        
+        _fileSystemPtr = IntPtr::IntPtr(FileSystem);     
+        FileSystem->UserContext = _fsHandle.ToPointer();
         if (nullptr != mountPoint && mountPoint->Length >= 0)
         {
             PWSTR nativeMountPoint = (PWSTR)System::Runtime::InteropServices::Marshal::StringToHGlobalUni(mountPoint).ToPointer();

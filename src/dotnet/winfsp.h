@@ -8,7 +8,7 @@
 #define DEFAULT_IRP_TIMOUT 10*60*1000 
 #define DEFAULT_TRANSACT_TIMEOUT 10*1000 
 
-#define HANDLE_TO_FILESYSTEM(f) (WinFsp::FileSystem^)GCHandle::FromIntPtr(IntPtr::IntPtr(f)).Target
+#define HANDLE_TO_FILESYSTEM(f) (WinFsp::FileSystem^)GCHandle::FromIntPtr(IntPtr::IntPtr(f->UserContext)).Target
 #define HANDLE_TO_FILECONTEXT(f) (WinFsp::FspFileContext^)GCHandle::FromIntPtr(IntPtr::IntPtr(f)).Target
 #define COPY_FILE_INFO(fInfo,PtrInfo)  IntPtr pnt = Marshal::AllocHGlobal(Marshal::SizeOf(fInfo)); \
                                        Marshal::StructureToPtr(fInfo, pnt, false); \
@@ -771,6 +771,7 @@ namespace WinFsp {
         static FSP_FILE_SYSTEM_INTERFACE* nativeInterface=NULL;
         static bool _isInitialized;
         IntPtr _fileSystemPtr;
+        IntPtr _fsHandle;
         IntPtr RootSecurityDescriptor;
         VolumeInformation^ _volumeInformation;
         FileSystemInteface^ _fsInterface;

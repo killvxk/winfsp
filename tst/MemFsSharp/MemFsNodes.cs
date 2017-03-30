@@ -12,6 +12,7 @@ namespace MemFsSharp
 {
     partial class RamFS
     {
+        #region FileNode Management 
         private readonly ConcurrentDictionary<string, FileObject> _fileObjects;
 
         internal class FileObject {

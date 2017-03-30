@@ -57,19 +57,14 @@ namespace MemFsSharp
     }
     partial class MemFs 
     {
-        FileSystem fileSystem;
-        FileSystemConfig fileSystenConfig;
-        FileSystemInteface fileSystemInterface;
-        VolumeInformation fileSystenVolInfo;
+        MemFsInterface fileSystemInterface;
+
         public MemFs() {
-            fileSystemInterface = new MemFsImpl();
-            fileSystenConfig = new FileSystemConfig();
-            fileSystenVolInfo = new VolumeInformation();
-            fileSystem = FileSystem.BuildFileSystem(fileSystenConfig, fileSystenVolInfo, fileSystemInterface);
+            fileSystemInterface = new MemFsInterface();
         }
         public void MountFileSysten(string mountPoint)
         {
-            fileSystem.MountFileSystem(mountPoint);
+            fileSystemInterface.MountFileSystem("X:");
         }
 
 
