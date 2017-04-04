@@ -10,6 +10,7 @@ using WinFsp;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Security.AccessControl;
 
 namespace MemFsSharp
 {
@@ -21,6 +22,7 @@ namespace MemFsSharp
         internal class FileObject
         {
             public string FileName { get; set; }
+            public RawSecurityDescriptor descriptor;
             public WinFsp.FileInfo Info { get; internal set; }
             public FileObject()
             {
@@ -175,6 +177,7 @@ namespace MemFsSharp
             _fsConfig.VolumeCreationTime = (uint)DateTime.Now.Ticks;
             _fsConfig.MaxComponentLength = 256;
             _fsConfig.FileInfoTimeOut = 25;
+            _fsConfig.RootSecurityDescriptor = "O:BAG:BAD:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;FA;;;WD)";
         }
         private void InitializeVolInfo() {
             _volInfo = new VolumeInformation();
@@ -182,6 +185,7 @@ namespace MemFsSharp
             _volInfo.TotalSize = (ulong)1024 * 1024 * 1024 * 10;
             _volInfo.VolumeLabel = "MemFs";
             rootDirectory = new MemDir("\\");
+            rootDirectory.descriptor = new RawSecurityDescriptor(_fsConfig.RootSecurityDescriptor);
             _fileObjects.TryAdd("\\", rootDirectory);
             _fileObjects.TryAdd("", rootDirectory);
         }
@@ -256,7 +260,7 @@ namespace MemFsSharp
         public override void Close(FileSystem FileSystem, FspFileContext FileContext)
         {           
         }
-        public override uint Create(FileSystem FileSystem, string FileName, uint CreateOptions, uint GrantedAccess, uint fileAttributes, ref SecurityDescriptor descriptor, ulong AllocationSize, FspFileContext fileContext, ref FileInfo fileInfo)
+        public override uint Create(FileSystem FileSystem, string FileName, uint CreateOptions, uint GrantedAccess, uint fileAttributes, ref RawSecurityDescriptor descriptor, ulong AllocationSize, FspFileContext fileContext, ref FileInfo fileInfo)
         {
             var parentName = FIO.Path.GetDirectoryName(FileName);
             var parent = GetFileObject(parentName);
@@ -293,7 +297,8 @@ namespace MemFsSharp
             else
             {
                 fileContext.FileInfo.FileAttributes = WinFspFileAttributes.Directory;
-            }                        
+            }
+            file.descriptor = descriptor;                      
             return NtStatus.Success;
         }
    
@@ -452,7 +457,7 @@ namespace MemFsSharp
             }
             return NtStatus.Success;
         }      
-        public override uint SetSecurity(FileSystem FileSystem, FspFileContext FileContext, uint SecurityInformation, SecurityDescriptor ModificationDescriptor)
+        public override uint SetSecurity(FileSystem FileSystem, FspFileContext FileContext, uint SecurityInformation, RawSecurityDescriptor ModificationDescriptor)
         {
             return NtStatus.Success;
         }
@@ -495,6 +500,20 @@ namespace MemFsSharp
             BytesTransferred=(uint)effectiveLength;
 
             return NtStatus.Success;
+        }
+        public override uint GetSecurityByName(FileSystem fileSystem, string fileName, ref uint fileAttributes, ref RawSecurityDescriptor descriptor)
+        {
+            
+            fileName = fileName.TrimEnd('\\');
+            var file = GetFileObject(fileName);
+            Trace.WriteLine($"GetSecurity FileName {fileName} fileFound {file != null}");
+            if (file == null)
+                return NtStatus.ObjectNotFound;
+            descriptor = file.descriptor;
+            fileAttributes = file.Info.FileAttributes;
+            descriptor.DiscretionaryAcl.
+            return NtStatus.Success;
+            
         }
 
     }

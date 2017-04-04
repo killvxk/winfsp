@@ -4,7 +4,7 @@
 using WinFsp::FileSystem;
 using WinFsp::FspFileContext;
 using WinFsp::VolumeInformation;
-using WinFsp::SecurityDescriptor;
+using WinFsp::FsHelperOp;
 
 VOID WinFspCallbacks::Cleanup(FSP_FILE_SYSTEM *FspFileSystem, PVOID FileNode0, PWSTR FileName, ULONG Flag) {
 
@@ -46,16 +46,25 @@ NTSTATUS WinFspCallbacks::SetVolumeLabel(FSP_FILE_SYSTEM *FspFileSystem, PWSTR V
     //ToDo:: Marshalling of native volume info
     return fs->_fsInterface->SetVolumeLabelA(fs, gcnew String(VolumeLabel), volInfo);
 }
-NTSTATUS WinFspCallbacks::GetSecurityByName(FSP_FILE_SYSTEM *FileSystem, PWSTR FileName, PUINT32 PFileAttributes, PSECURITY_DESCRIPTOR SecurityDescriptor, SIZE_T *PSecurityDescriptorSize) {
-    return STATUS_NOT_IMPLEMENTED;
+NTSTATUS WinFspCallbacks::GetSecurityByName(FSP_FILE_SYSTEM *FspFileSystem, PWSTR FileName, PUINT32 PFileAttributes, PSECURITY_DESCRIPTOR SecurityDescriptor, SIZE_T *PSecurityDescriptorSize) {
+    FileSystem ^fs = HANDLE_TO_FILESYSTEM(FspFileSystem);
+    RawSecurityDescriptor ^descriptor;
+    UINT32 fileAttrib;
+    UINT32 Size;
+    NTSTATUS result =  fs->_fsInterface->GetSecurityByName(fs, gcnew String(FileName),fileAttrib,descriptor);
+    *PFileAttributes = fileAttrib;
+    result =  FsHelperOp::CopyRawDescriptorToPtr(descriptor,IntPtr::IntPtr(SecurityDescriptor),Size);
+    *PSecurityDescriptorSize = Size;
+    return result;
+
 }
 NTSTATUS WinFspCallbacks::Create(FSP_FILE_SYSTEM *FspFileSystem, PWSTR FileName, UINT32 CreateOptions, UINT32 GrantedAccess, UINT32 FileAttributes, PSECURITY_DESCRIPTOR SecurityDescriptor, UINT64 AllocationSize, PVOID *PFileNode, FSP_FSCTL_FILE_INFO *FileInfo) {
     FileSystem ^fs = HANDLE_TO_FILESYSTEM(FspFileSystem);
     String^ fName = gcnew String(FileName);
-    FspFileContext ^context;
+    FspFileContext ^context= gcnew FspFileContext();
     GCHandle contextHandle = GCHandle::Alloc(context);
-    WinFsp::SecurityDescriptor ^desciptor = gcnew WinFsp::SecurityDescriptor(SecurityDescriptor, GetSecurityDescriptorLength(SecurityDescriptor));
-    NTSTATUS result = fs->_fsInterface->Create(fs, fName, CreateOptions, GrantedAccess, FileAttributes, desciptor, AllocationSize, context,context->FileInfo);
+    CREATE_RAW_SECURITY_DESC(SecurityDescriptor, descriptor, GetSecurityDescriptorLength(SecurityDescriptor));    
+    NTSTATUS result = fs->_fsInterface->Create(fs, fName, CreateOptions, GrantedAccess, FileAttributes, descriptor, AllocationSize, context,context->FileInfo);
     if (NT_SUCCESS(result)) {
         *PFileNode = GCHandle::ToIntPtr(contextHandle).ToPointer();
         WinFsp::FileInfo^ info = context->FileInfo;
@@ -72,7 +81,7 @@ NTSTATUS WinFspCallbacks::Create(FSP_FILE_SYSTEM *FspFileSystem, PWSTR FileName,
 NTSTATUS WinFspCallbacks::Open(FSP_FILE_SYSTEM *FspFileSystem, PWSTR FileName, UINT32 CreateOptions, UINT32 GrantedAccess, PVOID *PFileNode, FSP_FSCTL_FILE_INFO *FileInfo) {
     FileSystem ^fs = HANDLE_TO_FILESYSTEM(FspFileSystem);
     String^ fName = gcnew String(FileName);
-    FspFileContext ^context;
+    FspFileContext ^context=gcnew FspFileContext();
     GCHandle contextHandle = GCHandle::Alloc(context);
     NTSTATUS result = fs->_fsInterface->Open(fs, fName, CreateOptions, GrantedAccess, context,context->FileInfo);
     if (NT_SUCCESS(result)) {
@@ -179,7 +188,7 @@ NTSTATUS WinFspCallbacks::SetSecurity(FSP_FILE_SYSTEM *FspFileSystem, PVOID File
     FileSystem ^fs = HANDLE_TO_FILESYSTEM(FspFileSystem);
     FspFileContext ^context = HANDLE_TO_FILECONTEXT(FileNode0);
     ULONG length = GetSecurityDescriptorLength(ModificationDescriptor);
-    WinFsp::SecurityDescriptor^ descriptor = gcnew  WinFsp::SecurityDescriptor(ModificationDescriptor, length);
+    CREATE_RAW_SECURITY_DESC(ModificationDescriptor, descriptor, length);
     return fs->_fsInterface->SetSecurity(fs, context, SecurityInformation, descriptor);
 }
 
@@ -204,7 +213,7 @@ NTSTATUS WinFspCallbacks::ReadDirectory(FSP_FILE_SYSTEM *FspFileSystem, PVOID Fi
 NTSTATUS WinFspCallbacks::GetSecurity(FSP_FILE_SYSTEM *FspFileSystem, PVOID FileContext, PSECURITY_DESCRIPTOR SecurityDescriptor, SIZE_T *PSecurityDescriptorSize) {
     FileSystem ^fs = HANDLE_TO_FILESYSTEM(FspFileSystem);
     FspFileContext ^context = HANDLE_TO_FILECONTEXT(FileContext);
-    WinFsp::SecurityDescriptor^ descriptor = nullptr;
+    RawSecurityDescriptor^ descriptor = nullptr;
     NTSTATUS result = fs->_fsInterface->GetSecurity(fs, context, descriptor);
     if (NT_SUCCESS(result)) {
         if (descriptor == nullptr)

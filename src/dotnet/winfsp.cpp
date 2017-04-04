@@ -40,7 +40,7 @@ namespace WinFsp {
 
     NTSTATUS FsHelperOp::FileSystemResolveReparsePoints(
         FileSystem^ Fs,
-        FspFileContext Context,
+        FspFileContext^ Context,
         String^ FileName, 
         UINT32 ReparsePointIndex, 
         BOOLEAN ResolveLastPathComponent,
@@ -62,70 +62,30 @@ namespace WinFsp {
     int FsHelperOp::CopyBufferToNativeByPin(IntPtr dest, array<byte^>^ data, int sourceOffset, int destOffset, int length) {
         return 0;
     }
+    NTSTATUS FsHelperOp::CopyRawDescriptorToPtr(RawSecurityDescriptor^ src, IntPtr dst, UINT% pSize) {
+        if (src != nullptr) {
+            pSize = src->BinaryLength;
+            if (src->BinaryLength > (int)pSize)             
+                return STATUS_BUFFER_OVERFLOW;            
+            else {
+                if (dst.ToPointer() != nullptr) {
+                    array<unsigned char>^ binForm = gcnew array<unsigned char>(src->BinaryLength);
+                    src->GetBinaryForm(binForm, 0);
+                    Marshal::Copy(binForm, 0,dst, (int)binForm->Length);
+                    return STATUS_SUCCESS;
+                }else
+                    return STATUS_BUFFER_OVERFLOW;
+            }
+        }
+        else
+            return STATUS_INVALID_DEVICE_REQUEST;
+    
+    }
     void ReadDirectoryBuffer::SetEoF() {
         FspFileSystemAddDirInfo(0, _buffer, _length, _pBytesTransferred);
     }
 
-    bool SecurityDescriptor::ConvertToString(PSECURITY_DESCRIPTOR desc, ULONG length, String^% descriptorStr, PULONG error) {
-        LPSTR sddlPtr = NULL;
-        if (ConvertSecurityDescriptorToStringSecurityDescriptorA(desc, SDDL_REVISION_1, BACKUP_SECURITY_INFORMATION, &sddlPtr, &length)) {
-            descriptorStr = gcnew String(sddlPtr);
-            return true;
-        }
-        else {
-            *error = GetLastError();
-            return false;
-        }
-    }
-    bool SecurityDescriptor::ConvertToDescriptor(String^ descriptrStr, PSECURITY_DESCRIPTOR* ptrDesc, PULONG length, PULONG error) {
-        LPCSTR sddlPtr = (LPCSTR)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(descriptrStr).ToPointer();
-        if (ConvertStringSecurityDescriptorToSecurityDescriptorA(sddlPtr, SDDL_REVISION_1, ptrDesc, length)) {
-            return true;
-        }
-        else {
-            *error = GetLastError();
-            return false;
-        }
-    }
-    String^ SecurityDescriptor::ToString()
-    {
-        PSECURITY_DESCRIPTOR desc = (PSECURITY_DESCRIPTOR)SecurityDescriptorPtr->ToPointer();
-        ULONG error = 00;
-        if (!ConvertToString(desc, Length, Sddl, &error)) {
-            Console::WriteLine("ConvertToString Security descriptor failed to convert Error {0}", error);
-            return nullptr;
-        }
-        return Sddl;
 
-    }
-    SecurityDescriptor::~SecurityDescriptor() {
-        PSECURITY_DESCRIPTOR sdes = (PSECURITY_DESCRIPTOR)SecurityDescriptorPtr->ToPointer();
-        if (sdes != NULL)
-            free(sdes);
-    }
-
-    SecurityDescriptor::SecurityDescriptor(PSECURITY_DESCRIPTOR ptr, ULONG length) {
-        SecurityDescriptorPtr = IntPtr::IntPtr(ptr);
-        Length = length;
-        ULONG error = 00;
-        if (!ConvertToString(ptr, length, Sddl, &error)) {
-            Console::WriteLine("ConvertToString Security descriptor failed to convert Error {0}", error);
-        }
-    }
-
-    SecurityDescriptor::SecurityDescriptor(String^ sddl) {
-        PSECURITY_DESCRIPTOR pDes;
-        ULONG length;
-        ULONG error = 00;
-
-        if (ConvertToDescriptor(sddl, &pDes, &length, &error))
-        {
-            Length = length;
-            SecurityDescriptorPtr = IntPtr::IntPtr(pDes);
-            Sddl = sddl;
-        }
-        Console::WriteLine("ConvertToString Security descriptor failed to convert Error {0}", sddl, error);
-    }
 
     #pragma endregion
     
@@ -171,7 +131,7 @@ namespace WinFsp {
         }
         //    if(ToFree)
         //        free(RootSddl);
-        RootSecurityDescriptor = IntPtr::IntPtr(RootSecurity);
+        RootSecurityDescriptor = gcnew RawSecurityDescriptor(_config->RootSecurityDescriptor);
 
         if (_config->SectorSize == 0)
             _config->SectorSize = DEFAULT_SECTOR_SIZE;

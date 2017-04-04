@@ -13,8 +13,18 @@
 #define COPY_FILE_INFO(fInfo,PtrInfo)  IntPtr pnt = Marshal::AllocHGlobal(Marshal::SizeOf(fInfo)); \
                                        Marshal::StructureToPtr(fInfo, pnt, false); \
                                        memcpy(PtrInfo, pnt.ToPointer(), sizeof FSP_FSCTL_FILE_INFO);Marshal::FreeHGlobal(pnt);
+
+#define CREATE_RAW_SECURITY_DESC(src,dest,len)  array<unsigned char>^ securityDescData = gcnew array<unsigned char>(len); \
+                                                Marshal::Copy(IntPtr::IntPtr(src), securityDescData, 0, (int)len);\
+                                                RawSecurityDescriptor^ dest = gcnew  RawSecurityDescriptor(securityDescData, 0);
+    
+
+
 using namespace System;
 using namespace System::Runtime;
+using namespace System::Security::AccessControl;
+using namespace System::Security::Principal;
+
 using System::Runtime::InteropServices::Marshal;
 using System::Runtime::InteropServices::GCHandle;
 #pragma once
@@ -208,7 +218,7 @@ namespace WinFsp {
     public:
         UINT64 static GetFileTime();
         static NTSTATUS FileSystemResolveReparsePoints(FileSystem^ Fs,
-            FspFileContext Context,
+            FspFileContext^ Context,
             String^ FileName,
             UINT32 ReparsePointIndex,
             BOOLEAN ResolveLastPathComponent,
@@ -216,21 +226,9 @@ namespace WinFsp {
             IntPtr Buffer,
             SIZE_T% Size);
         static int CopyBufferToNativeByPin(IntPtr dest, array<byte^>^ data, int sourceOffset, int destOffset, int length);
+        static NTSTATUS CopyRawDescriptorToPtr(RawSecurityDescriptor^ src,IntPtr dst,UINT% pSize);
     };
-    public ref class SecurityDescriptor {
-        IntPtr^ SecurityDescriptorPtr;
-        ULONG Length;
-        String^ Sddl;
-
-        static bool ConvertToString(PSECURITY_DESCRIPTOR desc, ULONG length, String^% descriptorStr, PULONG error);
-        static bool ConvertToDescriptor(String^ descriptrStr, PSECURITY_DESCRIPTOR* ptrDesc, PULONG length, PULONG error);
-    public:
-        SecurityDescriptor(PSECURITY_DESCRIPTOR ptr, ULONG length);
-        SecurityDescriptor(String^ sddl);
-        ~SecurityDescriptor();
-        String^ ToString() override;
-    };
-
+   
     #pragma endregion
 
   
@@ -283,7 +281,7 @@ namespace WinFsp {
         virtual UINT32 GetSecurityByName(FileSystem^ fileSystem, 
             String^ fileName, 
             UINT32% fileAttributes, 
-            SecurityDescriptor^% descriptor) {
+            RawSecurityDescriptor^% descriptor) {
             return NtStatus::InvalidDeviceRequest;
         }
 
@@ -305,7 +303,7 @@ namespace WinFsp {
             UINT32 CreateOptions,
             UINT32 GrantedAccess,
             UINT32 fileAttributes,
-            SecurityDescriptor^% descriptor,
+            RawSecurityDescriptor^% descriptor,
             UINT64 AllocationSize,
             FspFileContext^ fileContext, 
             FileInfo^% fileInfo) {
@@ -609,7 +607,7 @@ namespace WinFsp {
         /// <returns>STATUS_SUCCESS or error code.</returns>
         virtual UINT32 GetSecurity(FileSystem^ FileSystem,
             FspFileContext^ FileContext,
-            SecurityDescriptor^% SecurityDescriptor) {
+            RawSecurityDescriptor^% SecurityDescriptor) {
             return NtStatus::InvalidDeviceRequest;
         }
         /// <summary>
@@ -628,7 +626,7 @@ namespace WinFsp {
         virtual  UINT32 SetSecurity(FileSystem ^FileSystem,
             FspFileContext^ FileContext,
             UINT32 SecurityInformation,
-            SecurityDescriptor^ ModificationDescriptor) {
+            RawSecurityDescriptor^ ModificationDescriptor) {
             return NtStatus::InvalidDeviceRequest;
         }
 
@@ -772,7 +770,7 @@ namespace WinFsp {
         static bool _isInitialized;
         IntPtr _fileSystemPtr;
         IntPtr _fsHandle;
-        IntPtr RootSecurityDescriptor;
+        RawSecurityDescriptor^ RootSecurityDescriptor;
         VolumeInformation^ _volumeInformation;
         FileSystemInteface^ _fsInterface;
         FileSystemConfig^ _config;
